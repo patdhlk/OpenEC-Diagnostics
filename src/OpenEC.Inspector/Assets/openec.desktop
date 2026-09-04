@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=OpenEC Inspector
+GenericName=EtherCAT Diagnostics
+Comment=Passive EtherCAT monitoring and diagnostics
+Exec=OpenEC.Inspector
+Icon=openec
+Terminal=false
+Categories=Development;Engineering;Network;
+Keywords=EtherCAT;fieldbus;diagnostics;pcap;TwinCAT;

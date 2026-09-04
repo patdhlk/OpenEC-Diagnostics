@@ -1,0 +1,56 @@
+OpenEC-Diagnostics
+Copyright 2026 Patrick Dahlke
+
+This product includes software developed by Patrick Dahlke
+(https://github.com/patdhlk/OpenEC-Diagnostics).
+
+Licensed under the Apache License, Version 2.0. See the LICENSE file
+for the full license text.
+
+--------------------------------------------------------------------
+Third-party dependencies
+--------------------------------------------------------------------
+
+OpenEC-Diagnostics links against the following packages at run time.
+They are consumed unmodified from nuget.org; their license terms apply
+to those packages, not to this project's own source.
+
+Apache License 2.0
+  Dahlke.EtherCAT.Cia402      https://github.com/patdhlk/Dahlke.TwinCAT.Ads
+  Dahlke.EtherCAT.Esi         https://github.com/patdhlk/Dahlke.TwinCAT.Ads
+  Dahlke.EtherCAT.Diagnostics https://github.com/patdhlk/Dahlke.TwinCAT.Ads
+
+MIT License
+  SharpPcap                   https://github.com/chmorgan/sharppcap
+  Microsoft.Extensions.*      https://github.com/dotnet/runtime
+  Spectre.Console             https://github.com/spectreconsole/spectre.console
+  Spectre.Console.Cli         https://github.com/spectreconsole/spectre.console
+  Avalonia                    https://github.com/AvaloniaUI/Avalonia
+  CommunityToolkit.Mvvm       https://github.com/CommunityToolkit/dotnet
+
+Mozilla Public License 2.0
+  PacketDotNet                https://github.com/dotpcap/packetnet
+    Pulled in transitively by SharpPcap. MPL-2.0 is a file-level
+    copyleft: it obliges anyone who *modifies PacketDotNet's own
+    source files* to publish those modifications. This project does
+    not modify PacketDotNet — it references the published package —
+    so no MPL obligation extends to OpenEC-Diagnostics' source.
+
+Test-only dependencies (not shipped in any runtime output):
+  xunit (Apache-2.0), xunit.runner.visualstudio (Apache-2.0),
+  Microsoft.NET.Test.Sdk (MIT), coverlet.collector (MIT),
+  Avalonia.Headless.XUnit (MIT), Spectre.Console.Testing (MIT).
+
+--------------------------------------------------------------------
+Trademarks
+--------------------------------------------------------------------
+
+EtherCAT(R) is a registered trademark and patented technology,
+licensed by Beckhoff Automation GmbH, Germany. TwinCAT(R) is a
+registered trademark of Beckhoff Automation GmbH. EC-Monitor and
+EC-Inspector are products of acontis technologies GmbH.
+
+This project is an independent, unaffiliated implementation. It is not
+endorsed by, sponsored by, or associated with Beckhoff Automation
+GmbH, the EtherCAT Technology Group, or acontis technologies GmbH.
+Those names are used only to describe interoperability and prior art.

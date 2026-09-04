@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="OpenEC.Inspector.Views.VariableWatchView">
+  <Grid>
+    <StackPanel IsVisible="{Binding !HasVariables}" VerticalAlignment="Center"
+                HorizontalAlignment="Center" Spacing="12">
+      <TextBlock Text="No process image yet" FontSize="18" FontWeight="SemiBold"
+                 HorizontalAlignment="Center" />
+      <TextBlock Classes="label"
+                 Text="Load an ENI file, or capture the master's startup so the bus can be learned instead — attaching mid-run misses it, so restart the master while this capture is running."
+                 TextWrapping="Wrap" MaxWidth="420" HorizontalAlignment="Center" />
+      <Button Classes="accent" Content="Load ENI…" HorizontalAlignment="Center"
+              Command="{Binding LoadEniCommand}" />
+    </StackPanel>
+
+    <DockPanel IsVisible="{Binding HasVariables}">
+      <TextBox DockPanel.Dock="Top" Watermark="Filter variables…"
+               Text="{Binding FilterText}" Margin="0,0,0,8" />
+      <ListBox ItemsSource="{Binding Rows}">
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <Grid ColumnDefinitions="*,44,90,240,110">
+              <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+              <TextBlock Grid.Column="1" Classes="label" Text="{Binding Direction}" />
+              <TextBlock Grid.Column="2" Classes="label" Text="{Binding DataType}" />
+              <TextBlock Grid.Column="3" Classes="mono" Text="{Binding Value}" />
+              <TextBlock Grid.Column="4" Classes="label" Text="{Binding Updated}" />
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </DockPanel>
+  </Grid>
+</UserControl>

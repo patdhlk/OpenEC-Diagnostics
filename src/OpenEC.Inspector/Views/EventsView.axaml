@@ -1,0 +1,47 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="OpenEC.Inspector.Views.EventsView">
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Classes="panelHeader">
+      <DockPanel>
+        <ToggleButton DockPanel.Dock="Right" IsChecked="{Binding IsCollapsed}"
+                      Padding="6,0" FontSize="11" Content="▾">
+          <ToggleButton.Styles>
+            <Style Selector="ToggleButton:checked">
+              <Setter Property="Content" Value="▸" />
+            </Style>
+          </ToggleButton.Styles>
+        </ToggleButton>
+        <StackPanel Orientation="Horizontal" Spacing="16">
+          <TextBlock Text="Messages" FontWeight="SemiBold" VerticalAlignment="Center" />
+          <ItemsControl ItemsSource="{Binding Categories}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="12" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <CheckBox Content="{Binding Name}" IsChecked="{Binding IsEnabled}" FontSize="12" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <CheckBox Content="Auto-scroll" IsChecked="{Binding AutoScroll}" FontSize="12" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <ListBox x:Name="EventList" ItemsSource="{Binding Rows}" Height="180"
+             IsVisible="{Binding !IsCollapsed}" Background="{DynamicResource Panel}">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <Grid ColumnDefinitions="110,110,*">
+            <TextBlock Classes="mono" Text="{Binding Time}" />
+            <TextBlock Grid.Column="1" Classes="label" Text="{Binding Category}" />
+            <TextBlock Grid.Column="2" Text="{Binding Description}" FontSize="12" TextWrapping="Wrap" />
+          </Grid>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+  </DockPanel>
+</UserControl>

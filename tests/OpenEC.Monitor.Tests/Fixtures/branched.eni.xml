@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EtherCATConfig>
+  <Config>
+    <Master><Info><Name>EtherCAT Master</Name></Info></Master>
+    <Slave>
+      <Info><Name>Term 1 (EK1100)</Name><PhysAddr>1001</PhysAddr><AutoIncAddr>0</AutoIncAddr>
+        <VendorId>2</VendorId><ProductCode>72100946</ProductCode><RevisionNo>1179648</RevisionNo></Info>
+    </Slave>
+    <Slave>
+      <Info><Name>Term 2 (EK1122)</Name><PhysAddr>1002</PhysAddr><AutoIncAddr>65535</AutoIncAddr>
+        <VendorId>2</VendorId><ProductCode>73502802</ProductCode><RevisionNo>1179648</RevisionNo></Info>
+      <PreviousPort><PhysAddr>1001</PhysAddr><Port>B</Port></PreviousPort>
+    </Slave>
+    <Slave>
+      <Info><Name>Term 3 (EL1008)</Name><PhysAddr>1003</PhysAddr><AutoIncAddr>65534</AutoIncAddr>
+        <VendorId>2</VendorId><ProductCode>66093138</ProductCode><RevisionNo>1179648</RevisionNo></Info>
+      <PreviousPort><PhysAddr>1002</PhysAddr><Port>B</Port></PreviousPort>
+    </Slave>
+    <Slave>
+      <Info><Name>Term 4 (EL2008)</Name><PhysAddr>1004</PhysAddr><AutoIncAddr>65533</AutoIncAddr>
+        <VendorId>2</VendorId><ProductCode>131608658</ProductCode><RevisionNo>1179648</RevisionNo></Info>
+      <PreviousPort><PhysAddr>1002</PhysAddr><Port>C</Port></PreviousPort>
+    </Slave>
+  </Config>
+</EtherCATConfig>

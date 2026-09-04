@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Optional read-only TwinCAT master (ADS) enrichment for the OpenEC.Monitor EtherCAT SDK.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591;CS1573</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OpenEC.Monitor\OpenEC.Monitor.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dahlke.EtherCAT.Diagnostics" Version="0.10.0" />
+  </ItemGroup>
+
+</Project>

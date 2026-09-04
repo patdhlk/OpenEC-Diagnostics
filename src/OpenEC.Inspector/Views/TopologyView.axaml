@@ -1,0 +1,124 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:OpenEC.Inspector.ViewModels"
+             xmlns:views="using:OpenEC.Inspector.Views"
+             x:Class="OpenEC.Inspector.Views.TopologyView">
+  <UserControl.Resources>
+    <views:StatusDotBrushConverter x:Key="DotBrush" />
+    <views:PortMarkBrushConverter x:Key="PortBrush" />
+  </UserControl.Resources>
+
+  <DockPanel>
+    <!-- Zoom selector and the honest-degradation notice share the bottom strip. -->
+    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="12"
+                Margin="8,4" VerticalAlignment="Center">
+      <!-- SelectedItem alone drives this: adding SelectedIndex as well would give the control two
+           competing sources of selection. Zoom defaults to 1.0, which selects that item. -->
+      <ComboBox Width="88" SelectedItem="{Binding Zoom, Mode=TwoWay}">
+        <x:Double>0.5</x:Double>
+        <x:Double>1.0</x:Double>
+        <x:Double>1.5</x:Double>
+        <x:Double>2.0</x:Double>
+      </ComboBox>
+      <TextBlock Classes="label" VerticalAlignment="Center"
+                 Text="{Binding Notice}" TextWrapping="Wrap"
+                 IsVisible="{Binding Notice, Converter={x:Static ObjectConverters.IsNotNull}}" />
+    </StackPanel>
+
+    <!-- Devices the port data could not place. Listed, never guessed onto the map. -->
+    <Border DockPanel.Dock="Bottom" Classes="panel" Margin="8,0,8,4"
+            IsVisible="{Binding HasUnplaced}">
+      <StackPanel Spacing="4">
+        <TextBlock Text="Not placed" FontWeight="SemiBold" />
+        <ItemsControl ItemsSource="{Binding Unplaced}" />
+      </StackPanel>
+    </Border>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+      <Canvas Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}"
+              Background="Transparent">
+        <Canvas.RenderTransform>
+          <ScaleTransform ScaleX="{Binding Zoom}" ScaleY="{Binding Zoom}" />
+        </Canvas.RenderTransform>
+
+        <!-- Wires first so boxes paint over their endpoints. -->
+        <ItemsControl ItemsSource="{Binding Wires}"
+                      Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><Canvas /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="vm:TopologyWireViewModel">
+              <!-- A conflicting edge is drawn where the WIRE says it is, in the fault colour,
+                   so the map itself shows where the ENI and the machine disagree (spec §7). -->
+              <Polyline Points="{Binding Points}" StrokeThickness="1.5"
+                        Stroke="{Binding HasConflict,
+                                 Converter={x:Static views:TopologyView.WireStrokeConverter}}"
+                        StrokeDashArray="{Binding IsInferred,
+                                          Converter={x:Static views:TopologyView.DashConverter}}" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <ItemsControl ItemsSource="{Binding Boxes}"
+                      Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}">
+          <!-- An ItemsControl over a Canvas wraps every item in a ContentPresenter, and it is that
+               container — not the templated Border — that the Canvas positions. Binding Canvas.Left
+               and Top on the container is the only thing that actually places the box; setting them
+               inside the DataTemplate is ignored. The same style reaches the nested port marks, whose
+               view model exposes the same X/Y, so ports are placed by the same rule. -->
+          <ItemsControl.Styles>
+            <Style Selector="ContentPresenter">
+              <Setter Property="Canvas.Left" Value="{Binding X}" />
+              <Setter Property="Canvas.Top" Value="{Binding Y}" />
+            </Style>
+          </ItemsControl.Styles>
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><Canvas /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="vm:TopologyBoxViewModel">
+              <Border Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}"
+                      Width="{Binding Width}" Height="{Binding Height}"
+                      Background="{DynamicResource Panel}"
+                      BorderBrush="{Binding Dot, Converter={StaticResource DotBrush}}"
+                      BorderThickness="2" CornerRadius="2"
+                      ToolTip.Tip="{Binding Tooltip}">
+                <Grid>
+                  <TextBlock Text="{Binding Label}" FontSize="11"
+                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                             IsVisible="{Binding IsWide}" />
+                  <!-- LayoutTransformControl, not a RenderTransform on the TextBlock: a render
+                       transform is purely visual and applied AFTER layout, so the label is first
+                       measured against the 16px box width, clipped to "10…", and only then rotated.
+                       A layout transform measures the label at its natural width and rotates that,
+                       mapping the full address onto the box's tall axis. -->
+                  <LayoutTransformControl HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          IsVisible="{Binding !IsWide}">
+                    <LayoutTransformControl.LayoutTransform>
+                      <RotateTransform Angle="-90" />
+                    </LayoutTransformControl.LayoutTransform>
+                    <TextBlock Text="{Binding Label}" FontSize="9" />
+                  </LayoutTransformControl>
+
+                  <ItemsControl ItemsSource="{Binding Ports}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate><Canvas /></ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Rectangle Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}"
+                                   Width="{Binding Width}" Height="{Binding Height}"
+                                   Fill="{Binding State, Converter={StaticResource PortBrush}}" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Canvas>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>
