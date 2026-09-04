@@ -14,7 +14,7 @@
     </StackPanel>
 
     <DockPanel IsVisible="{Binding HasVariables}">
-      <TextBox DockPanel.Dock="Top" Watermark="Filter variables…"
+      <TextBox DockPanel.Dock="Top" PlaceholderText="Filter variables…"
                Text="{Binding FilterText}" Margin="0,0,0,8" />
       <ListBox ItemsSource="{Binding Rows}">
         <ListBox.ItemTemplate>

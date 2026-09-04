@@ -40,7 +40,7 @@ irm https://raw.githubusercontent.com/patdhlk/OpenEC-Diagnostics/main/install.ps
 
 For manual downloads and the Inspector GUI, visit the [releases page](https://github.com/patdhlk/OpenEC-Diagnostics/releases/latest). Archive names follow the pattern `openec-<version>-<os>-<arch>.tar.gz` (Linux/macOS) or `openec-<version>-<os>-<arch>.zip` (Windows).
 
-**Runtime prerequisites:** Linux requires `libpcap0.8` and `libssl3`; Windows requires [Npcap](https://npcap.com/) even for offline pcap analysis; macOS ships libpcap. Building from source requires the .NET 8 SDK.
+**Runtime prerequisites:** Linux requires `libpcap0.8` and `libssl3`; Windows requires [Npcap](https://npcap.com/) even for offline pcap analysis; macOS ships libpcap. Building from source requires the .NET 10 SDK.
 
 ## ✨ Key Features
 
@@ -74,7 +74,8 @@ OpenEC-Diagnostics/
 
 ## 🚀 Getting Started
 
-Requires the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
+Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+(the projects target .NET 8, but Avalonia 12's build tooling needs the .NET 10 SDK).
 All dependencies resolve from nuget.org; nothing else is needed to build.
 
 ```bash

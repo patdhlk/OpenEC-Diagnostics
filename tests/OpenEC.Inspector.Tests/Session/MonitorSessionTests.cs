@@ -80,7 +80,7 @@ public class MonitorSessionTests
         };
 
         session.Start();
-        var finished = await Task.WhenAny(session.Completion, Task.Delay(TimeSpan.FromSeconds(5)));
+        var finished = await Task.WhenAny(session.Completion, Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
 
         Assert.Same(session.Completion, finished);
         Assert.Equal(SessionState.Completed, session.State);

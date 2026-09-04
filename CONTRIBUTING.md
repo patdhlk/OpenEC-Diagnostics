@@ -9,9 +9,10 @@ By contributing you agree that your contributions are licensed under the
 
 ## Getting set up
 
-You need the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
-Nothing else — all dependencies come from nuget.org, including the
-`Dahlke.EtherCAT.*` packages this SDK builds on.
+You need the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+(the projects target .NET 8, but Avalonia 12's build tooling requires the
+.NET 10 SDK). Nothing else — all dependencies come from nuget.org, including
+the `Dahlke.EtherCAT.*` packages this SDK builds on.
 
 ```bash
 git clone https://github.com/patdhlk/OpenEC-Diagnostics.git

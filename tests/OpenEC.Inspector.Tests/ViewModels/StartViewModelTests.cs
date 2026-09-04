@@ -70,7 +70,7 @@ public class StartViewModelTests
         MonitorSession? started = null;
         var vm = Create(s => started = s);
         var garbage = Path.Combine(Path.GetTempPath(), $"openec-garbage-{Guid.NewGuid():N}.pcap");
-        await File.WriteAllTextAsync(garbage, "this is not a capture file");
+        await File.WriteAllTextAsync(garbage, "this is not a capture file", TestContext.Current.CancellationToken);
         vm.PcapPath = garbage;
 
         await vm.StartFileCommand.ExecuteAsync(null);
@@ -86,7 +86,7 @@ public class StartViewModelTests
         var vm = Create(s => started = s);
         vm.PcapPath = TestSessions.WriteDemoPcap();
         var badEni = Path.Combine(Path.GetTempPath(), $"openec-bad-{Guid.NewGuid():N}.xml");
-        await File.WriteAllTextAsync(badEni, "<not-an-eni>");
+        await File.WriteAllTextAsync(badEni, "<not-an-eni>", TestContext.Current.CancellationToken);
         vm.EniPath = badEni;
 
         await vm.StartFileCommand.ExecuteAsync(null);

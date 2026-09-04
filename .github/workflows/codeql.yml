@@ -24,10 +24,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up .NET 8
+      # global.json pins the .NET 10 SDK (Roslyn >= 4.14) so the Avalonia 12 XAML
+      # generator runs under CodeQL autobuild; the .NET 8 runtime rides along.
+      - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3

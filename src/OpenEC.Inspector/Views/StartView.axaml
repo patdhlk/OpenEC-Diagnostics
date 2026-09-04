@@ -26,7 +26,7 @@
           <DockPanel>
             <Button DockPanel.Dock="Right" Content="Browse…" Margin="8,0,0,0"
                     Command="{Binding BrowseRecordCommand}" />
-            <TextBox Text="{Binding RecordPath}" Watermark="Record to file (optional)" />
+            <TextBox Text="{Binding RecordPath}" PlaceholderText="Record to file (optional)" />
           </DockPanel>
           <Button Content="Start capture" Classes="accent" Command="{Binding StartLiveCommand}"
                   IsEnabled="{Binding !IsStarting}" />
@@ -39,7 +39,7 @@
           <DockPanel>
             <Button DockPanel.Dock="Right" Content="Browse…" Margin="8,0,0,0"
                     Command="{Binding BrowsePcapCommand}" />
-            <TextBox Text="{Binding PcapPath}" Watermark="path/to/capture.pcap" />
+            <TextBox Text="{Binding PcapPath}" PlaceholderText="path/to/capture.pcap" />
           </DockPanel>
           <Button Content="Analyze file" Classes="accent" Command="{Binding StartFileCommand}"
                   IsEnabled="{Binding !IsStarting}" />
@@ -52,7 +52,7 @@
           <DockPanel>
             <Button DockPanel.Dock="Right" Content="Browse…" Margin="8,0,0,0"
                     Command="{Binding BrowseEniCommand}" />
-            <TextBox Text="{Binding EniPath}" Watermark="path/to/configuration.xml" />
+            <TextBox Text="{Binding EniPath}" PlaceholderText="path/to/configuration.xml" />
           </DockPanel>
           <TextBlock Classes="label" Text="Enables the process-variable watch and slave names." />
         </StackPanel>

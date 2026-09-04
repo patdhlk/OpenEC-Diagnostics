@@ -31,10 +31,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up .NET 8
+      # Avalonia 12's XAML source generator needs Roslyn >= 4.14 (the .NET 10 SDK);
+      # the .NET 8 runtime is kept so the net8.0 test assemblies still execute.
+      - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
       - name: Cache NuGet packages
         uses: actions/cache@v4
@@ -72,10 +76,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up .NET 8
+      - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
       - name: Verify formatting
         run: dotnet format --verify-no-changes
