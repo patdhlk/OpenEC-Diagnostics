@@ -1,0 +1,55 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ResourceDictionary.ThemeDictionaries>
+    <ResourceDictionary x:Key="Light">
+      <SolidColorBrush x:Key="Bg">#eef0f2</SolidColorBrush>
+      <SolidColorBrush x:Key="Panel">#ffffff</SolidColorBrush>
+      <SolidColorBrush x:Key="Panel2">#f5f6f7</SolidColorBrush>
+      <SolidColorBrush x:Key="Panel3">#eceef0</SolidColorBrush>
+      <SolidColorBrush x:Key="Line">#d5d9dc</SolidColorBrush>
+      <SolidColorBrush x:Key="Line2">#e9ecee</SolidColorBrush>
+      <SolidColorBrush x:Key="Ink">#2e3439</SolidColorBrush>
+      <SolidColorBrush x:Key="Ink2">#5f676d</SolidColorBrush>
+      <SolidColorBrush x:Key="Ink3">#8d949a</SolidColorBrush>
+      <SolidColorBrush x:Key="Chrome">#3f444a</SolidColorBrush>
+      <SolidColorBrush x:Key="Chrome2">#4e555c</SolidColorBrush>
+      <SolidColorBrush x:Key="ChromeLine">#5a6168</SolidColorBrush>
+      <SolidColorBrush x:Key="ChromeInk">#f2f4f6</SolidColorBrush>
+      <SolidColorBrush x:Key="ChromeInk2">#a9b1b8</SolidColorBrush>
+      <SolidColorBrush x:Key="Accent">#66b2ff</SolidColorBrush>
+      <SolidColorBrush x:Key="AccentSoft">#e2eefb</SolidColorBrush>
+      <SolidColorBrush x:Key="Ok">#0d8a16</SolidColorBrush>
+      <SolidColorBrush x:Key="Fail">#cd4e4e</SolidColorBrush>
+      <SolidColorBrush x:Key="Oos">#b78e00</SolidColorBrush>
+      <SolidColorBrush x:Key="Maint">#1b8fbf</SolidColorBrush>
+      <SolidColorBrush x:Key="Fc">#ee8632</SolidColorBrush>
+      <SolidColorBrush x:Key="PortBlocked" Color="#D0342C" />
+      <SolidColorBrush x:Key="PortDangling" Color="#E8A33D" />
+    </ResourceDictionary>
+    <ResourceDictionary x:Key="Dark">
+      <SolidColorBrush x:Key="Bg">#242729</SolidColorBrush>
+      <SolidColorBrush x:Key="Panel">#2e3236</SolidColorBrush>
+      <SolidColorBrush x:Key="Panel2">#33383c</SolidColorBrush>
+      <SolidColorBrush x:Key="Panel3">#3a4045</SolidColorBrush>
+      <SolidColorBrush x:Key="Line">#464c52</SolidColorBrush>
+      <SolidColorBrush x:Key="Line2">#3b4045</SolidColorBrush>
+      <SolidColorBrush x:Key="Ink">#e6e9eb</SolidColorBrush>
+      <SolidColorBrush x:Key="Ink2">#adb5bb</SolidColorBrush>
+      <SolidColorBrush x:Key="Ink3">#7f878d</SolidColorBrush>
+      <SolidColorBrush x:Key="Chrome">#1d2023</SolidColorBrush>
+      <SolidColorBrush x:Key="Chrome2">#2b3035</SolidColorBrush>
+      <SolidColorBrush x:Key="ChromeLine">#383e43</SolidColorBrush>
+      <SolidColorBrush x:Key="ChromeInk">#eef1f3</SolidColorBrush>
+      <SolidColorBrush x:Key="ChromeInk2">#98a1a8</SolidColorBrush>
+      <SolidColorBrush x:Key="Accent">#66b2ff</SolidColorBrush>
+      <SolidColorBrush x:Key="AccentSoft">#2c3d50</SolidColorBrush>
+      <SolidColorBrush x:Key="Ok">#44b34b</SolidColorBrush>
+      <SolidColorBrush x:Key="Fail">#e06e6e</SolidColorBrush>
+      <SolidColorBrush x:Key="Oos">#d1a91d</SolidColorBrush>
+      <SolidColorBrush x:Key="Maint">#41a8d6</SolidColorBrush>
+      <SolidColorBrush x:Key="Fc">#f09a55</SolidColorBrush>
+      <SolidColorBrush x:Key="PortBlocked" Color="#D0342C" />
+      <SolidColorBrush x:Key="PortDangling" Color="#E8A33D" />
+    </ResourceDictionary>
+  </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

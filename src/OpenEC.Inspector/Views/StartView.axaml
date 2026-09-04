@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="OpenEC.Inspector.Views.StartView">
+  <UserControl.Styles>
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{DynamicResource Panel}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="16" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer>
+    <StackPanel MaxWidth="520" Spacing="16" VerticalAlignment="Center" Margin="0,24">
+      <TextBlock Text="OpenEC Inspector" FontSize="24" FontWeight="SemiBold" />
+
+      <Border Classes="card">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Live capture" FontWeight="SemiBold" />
+          <DockPanel>
+            <Button DockPanel.Dock="Right" Content="↻" Margin="8,0,0,0"
+                    Command="{Binding RefreshDevicesCommand}" />
+            <ComboBox ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}"
+                      HorizontalAlignment="Stretch" PlaceholderText="Capture interface (TAP monitor port)" />
+          </DockPanel>
+          <DockPanel>
+            <Button DockPanel.Dock="Right" Content="Browse…" Margin="8,0,0,0"
+                    Command="{Binding BrowseRecordCommand}" />
+            <TextBox Text="{Binding RecordPath}" Watermark="Record to file (optional)" />
+          </DockPanel>
+          <Button Content="Start capture" Classes="accent" Command="{Binding StartLiveCommand}"
+                  IsEnabled="{Binding !IsStarting}" />
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Capture file" FontWeight="SemiBold" />
+          <DockPanel>
+            <Button DockPanel.Dock="Right" Content="Browse…" Margin="8,0,0,0"
+                    Command="{Binding BrowsePcapCommand}" />
+            <TextBox Text="{Binding PcapPath}" Watermark="path/to/capture.pcap" />
+          </DockPanel>
+          <Button Content="Analyze file" Classes="accent" Command="{Binding StartFileCommand}"
+                  IsEnabled="{Binding !IsStarting}" />
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="8">
+          <TextBlock Text="ENI (optional)" FontWeight="SemiBold" />
+          <DockPanel>
+            <Button DockPanel.Dock="Right" Content="Browse…" Margin="8,0,0,0"
+                    Command="{Binding BrowseEniCommand}" />
+            <TextBox Text="{Binding EniPath}" Watermark="path/to/configuration.xml" />
+          </DockPanel>
+          <TextBlock Classes="label" Text="Enables the process-variable watch and slave names." />
+        </StackPanel>
+      </Border>
+
+      <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource Fail}" TextWrapping="Wrap"
+                 IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

@@ -1,0 +1,111 @@
+name: Bug report
+description: Something decodes wrong, crashes, or behaves unexpectedly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing. Decoding bugs are the most valuable reports this
+        project gets — and the hardest to act on without a capture.
+
+        **Before attaching a capture:** a `.pcap` from a live segment contains
+        the machine's full process image and the master's MAC address. Please
+        check you are allowed to publish it, and trim it to the frames that
+        matter.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you see, and what did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: The exact command or UI steps.
+      placeholder: |
+        openec analyze capture.pcap --eni bus.eni.xml --json
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Output
+      description: >-
+        Relevant output — `openec analyze --json` is ideal. For a crash,
+        the full stack trace.
+      render: text
+    validations:
+      required: false
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - OpenEC.Monitor (SDK / decoding)
+        - OpenEC.CLI
+        - OpenEC.Inspector (GUI)
+        - Learning mode / ENI reconstruction
+        - Topology view
+        - OpenEC.Monitor.Ads
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: "v0.4.0, or commit 6349ffe"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [Linux, macOS, Windows]
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Capture source
+      description: Live TAP capture, or an offline file? Which TAP, if live?
+      placeholder: "Offline .pcapng exported from Wireshark"
+    validations:
+      required: false
+
+  - type: input
+    id: master
+    attributes:
+      label: EtherCAT master
+      description: Which master produced the traffic, and which version?
+      placeholder: "TwinCAT 3.1 build 4024.56"
+    validations:
+      required: false
+
+  - type: textarea
+    id: devices
+    attributes:
+      label: Devices involved
+      description: >-
+        Vendor and product of the SubDevices the problem concerns, if known.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: attachments
+    attributes:
+      label: Can you share evidence?
+      options:
+        - label: I can attach a capture that reproduces this
+        - label: I can attach the ENI.xml
+        - label: I cannot share either (describe the traffic above instead)

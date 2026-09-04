@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EtherCATConfig>
+  <Config>
+    <Master>
+      <Info><Name>EtherCAT Master</Name></Info>
+    </Master>
+    <Slave>
+      <Info><Name>Term 1 (EK1100)</Name><PhysAddr>1001</PhysAddr><AutoIncAddr>0</AutoIncAddr><VendorId>2</VendorId><ProductCode>#x044c2c52</ProductCode><RevisionNo>#x00110000</RevisionNo></Info>
+    </Slave>
+    <Slave>
+      <Info><Name>Term 2 (EL1008)</Name><PhysAddr>1002</PhysAddr><AutoIncAddr>65535</AutoIncAddr><VendorId>2</VendorId><ProductCode>#x03f03052</ProductCode><RevisionNo>#x00120000</RevisionNo></Info>
+    </Slave>
+    <Slave>
+      <Info><Name>Term 3 (EL2008)</Name><PhysAddr>1003</PhysAddr><AutoIncAddr>65534</AutoIncAddr><VendorId>2</VendorId><ProductCode>#x07d83052</ProductCode><RevisionNo>#x00110000</RevisionNo></Info>
+    </Slave>
+    <Slave>
+      <Info><Name>Drive 4 (AX5101)</Name><PhysAddr>1004</PhysAddr><AutoIncAddr>65533</AutoIncAddr><VendorId>2</VendorId><ProductCode>#x13ed6012</ProductCode><RevisionNo>#x00000001</RevisionNo></Info>
+      <Mailbox>
+        <Send><Start>4096</Start><Length>128</Length></Send>
+        <Recv><Start>4224</Start><Length>128</Length></Recv>
+      </Mailbox>
+    </Slave>
+    <Cyclic>
+      <CycleTime>1000</CycleTime>
+      <Frame>
+        <Cmd><State>OP</State><Cmd>12</Cmd><Addr>16777216</Addr><DataLength>4</DataLength><Cnt>6</Cnt><InputOffs>0</InputOffs><OutputOffs>0</OutputOffs></Cmd>
+        <Cmd><State>OP</State><Cmd>7</Cmd><Adp>0</Adp><Ado>#x0130</Ado><DataLength>2</DataLength><Cnt>4</Cnt></Cmd>
+      </Frame>
+    </Cyclic>
+    <ProcessImage>
+      <Inputs>
+        <ByteSize>4</ByteSize>
+        <Variable><Name>Term 2 (EL1008).Channel 1.Input</Name><DataType>BOOL</DataType><BitSize>1</BitSize><BitOffs>0</BitOffs></Variable>
+        <Variable><Name>Term 2 (EL1008).Channel 2.Input</Name><DataType>BOOL</DataType><BitSize>1</BitSize><BitOffs>1</BitOffs></Variable>
+        <Variable><Name>Drive 4 (AX5101).Inputs.Statusword</Name><DataType>UINT</DataType><BitSize>16</BitSize><BitOffs>16</BitOffs></Variable>
+      </Inputs>
+      <Outputs>
+        <ByteSize>4</ByteSize>
+        <Variable><Name>Term 3 (EL2008).Channel 1.Output</Name><DataType>BOOL</DataType><BitSize>1</BitSize><BitOffs>0</BitOffs></Variable>
+        <Variable><Name>Drive 4 (AX5101).Outputs.Controlword</Name><DataType>UINT</DataType><BitSize>16</BitSize><BitOffs>16</BitOffs></Variable>
+      </Outputs>
+    </ProcessImage>
+  </Config>
+</EtherCATConfig>

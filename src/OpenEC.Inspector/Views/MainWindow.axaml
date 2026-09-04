@@ -1,0 +1,134 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:OpenEC.Inspector.ViewModels"
+        xmlns:views="using:OpenEC.Inspector.Views"
+        x:Class="OpenEC.Inspector.Views.MainWindow"
+        Title="OpenEC Inspector"
+        Width="1280" Height="800">
+  <Window.Resources>
+    <views:StatusDotBrushConverter x:Key="DotBrush" />
+    <views:GridLengthConverter x:Key="GridLength" />
+  </Window.Resources>
+
+  <Window.DataTemplates>
+    <DataTemplate DataType="{x:Type vm:StartViewModel}"><views:StartView /></DataTemplate>
+    <DataTemplate DataType="{x:Type vm:DashboardViewModel}"><views:DashboardView /></DataTemplate>
+    <DataTemplate DataType="{x:Type vm:DeviceEditorViewModel}"><views:DeviceEditorView /></DataTemplate>
+    <DataTemplate DataType="{x:Type vm:VariableWatchViewModel}"><views:VariableWatchView /></DataTemplate>
+  </Window.DataTemplates>
+
+  <NativeMenu.Menu>
+    <NativeMenu>
+      <NativeMenuItem Header="File">
+        <NativeMenuItem.Menu>
+          <NativeMenu>
+            <NativeMenuItem Header="Open Capture File…" Gesture="Cmd+O"
+                            Command="{Binding OpenCaptureFileCommand}" />
+            <NativeMenuItem Header="Load ENI…" Gesture="Cmd+L"
+                            Command="{Binding RestartWithEniCommand}"
+                            IsEnabled="{Binding HasSession}" />
+            <NativeMenuItem Header="Save Learned ENI…" Gesture="Cmd+S"
+                            Command="{Binding SaveLearnedEniCommand}" />
+            <NativeMenuItemSeparator />
+            <NativeMenuItem Header="Close Session" Gesture="Cmd+W"
+                            Command="{Binding StopSessionCommand}"
+                            IsEnabled="{Binding HasSession}" />
+          </NativeMenu>
+        </NativeMenuItem.Menu>
+      </NativeMenuItem>
+      <NativeMenuItem Header="Help">
+        <NativeMenuItem.Menu>
+          <NativeMenu>
+            <NativeMenuItem Header="OpenEC-Diagnostics on GitHub" Click="OnOpenProjectUrl" />
+            <NativeMenuItem Header="Report an Issue…" Click="OnReportIssue" />
+            <NativeMenuItemSeparator />
+            <NativeMenuItem Header="About OpenEC Inspector" Click="OnShowAbout" />
+          </NativeMenu>
+        </NativeMenuItem.Menu>
+      </NativeMenuItem>
+    </NativeMenu>
+  </NativeMenu.Menu>
+
+  <DockPanel>
+    <!-- Renders inline on Windows/Linux (no global menu bar there); collapses to nothing on
+         macOS, where these menus join the system menu bar after the default app menu. -->
+    <NativeMenuBar DockPanel.Dock="Top" />
+
+    <!-- chrome status bar -->
+    <Border DockPanel.Dock="Bottom" Classes="chrome" Padding="12,6"
+            BorderBrush="{DynamicResource Accent}" BorderThickness="0,2,0,0">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Ellipse Width="9" Height="9" VerticalAlignment="Center"
+                 Fill="{Binding SessionDot, Converter={StaticResource DotBrush}}" />
+        <TextBlock Text="{Binding StatusText}" FontSize="12" />
+        <Ellipse Width="9" Height="9" VerticalAlignment="Center" Margin="16,0,0,0"
+                 IsVisible="{Binding HasSession}"
+                 Fill="{Binding HealthDot, Converter={StaticResource DotBrush}}" />
+        <TextBlock Text="{Binding HealthText}" FontSize="12" VerticalAlignment="Center"
+                   IsVisible="{Binding HasSession}" />
+      </StackPanel>
+    </Border>
+
+    <!-- chrome top bar (session only) -->
+    <Border DockPanel.Dock="Top" Classes="chrome" Padding="16,10"
+            BorderBrush="{DynamicResource Accent}" BorderThickness="0,0,0,2"
+            IsVisible="{Binding HasSession}">
+      <DockPanel>
+        <!-- The tooltip sits on this wrapper, not on the Button: the command disables the button
+             whenever nothing has been learned, and a disabled Avalonia control takes no pointer
+             input, so a tooltip on the button itself would never be shown in the one state where
+             it has something to explain. Background="Transparent" is what makes the Border
+             hit-testable. -->
+        <Border DockPanel.Dock="Right" Margin="0,0,8,0" Background="Transparent"
+                ToolTip.Tip="{Binding SaveLearnedEniHint}">
+          <Button Content="Save learned ENI…" Command="{Binding SaveLearnedEniCommand}" />
+        </Border>
+        <Button DockPanel.Dock="Right" Content="{Binding SessionActionLabel}"
+                Command="{Binding StopSessionCommand}" />
+        <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+          <TextBlock Text="OpenEC Inspector" FontSize="15" FontWeight="Bold" />
+          <TextBlock Text="{Binding Session.SourceDescription}"
+                     Foreground="{DynamicResource ChromeInk2}" VerticalAlignment="Center" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <Grid>
+      <!-- start screen fills the window when no session -->
+      <ContentControl Content="{Binding CurrentPage}" IsVisible="{Binding !HasSession}" />
+
+      <Grid IsVisible="{Binding HasSession}">
+        <Grid.ColumnDefinitions>
+          <!-- MinWidth stops a drag from collapsing the pane to nothing, which would leave no
+               handle to drag back. -->
+          <ColumnDefinition Width="{Binding ExplorerWidth, Mode=TwoWay, Converter={StaticResource GridLength}}" MinWidth="180" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <views:ExplorerView DataContext="{Binding Explorer}" />
+        <GridSplitter Grid.Column="1" Width="4" ResizeDirection="Columns"
+                      Background="{DynamicResource Line}" />
+        <Grid Grid.Column="2" RowDefinitions="*,Auto">
+          <!-- Ambient DataContext here is still MainWindowViewModel: DataContext overrides on
+               ExplorerView/EventsView are scoped to their own subtrees, not this sibling Grid. -->
+          <ContentControl Content="{Binding CurrentPage}" Margin="12"
+                          IsVisible="{Binding HasSession}" />
+          <views:EventsView Grid.Row="1" DataContext="{Binding Events}" />
+        </Grid>
+      </Grid>
+
+      <!-- fault banner overlay: unchanged behavior, house Fail color -->
+      <Border IsVisible="{Binding FaultMessage, Converter={x:Static ObjectConverters.IsNotNull}}"
+              VerticalAlignment="Top" Background="{DynamicResource Fail}"
+              Padding="12,8" Margin="16">
+        <DockPanel>
+          <Button DockPanel.Dock="Right" Content="Dismiss" Margin="12,0,0,0"
+                  Command="{Binding DismissFaultCommand}" />
+          <TextBlock Text="{Binding FaultMessage}" Foreground="White"
+                     TextWrapping="Wrap" VerticalAlignment="Center" />
+        </DockPanel>
+      </Border>
+    </Grid>
+  </DockPanel>
+</Window>

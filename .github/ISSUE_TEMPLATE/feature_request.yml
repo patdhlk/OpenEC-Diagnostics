@@ -1,0 +1,47 @@
+name: Feature request
+description: Suggest a capability, a decoder, or a diagnostic
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Note that OpenEC-Diagnostics is **strictly passive** — it observes and
+        never transmits. Requests that need an active writer on the segment
+        are out of scope by design, though it is still worth opening an issue
+        to talk about whether the goal can be reached passively.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: >-
+        Describe the diagnostic situation, not the feature. What are you
+        trying to find out about a bus that you currently cannot?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like it to do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: observable
+    attributes:
+      label: What on the wire would make this possible?
+      description: >-
+        If you know which registers, mailbox protocol, or traffic pattern
+        carries the information, say so — it is usually the crux of whether a
+        passive tool can do it at all.
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: How do you solve this today?
+      description: Another tool, a manual procedure, or not at all.
+    validations:
+      required: false

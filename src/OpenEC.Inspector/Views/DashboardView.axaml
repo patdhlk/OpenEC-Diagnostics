@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="OpenEC.Inspector.Views.DashboardView">
+
+  <ScrollViewer>
+    <WrapPanel>
+      <Border Classes="tile" Margin="0,0,12,12">
+        <StackPanel>
+          <TextBlock Classes="label" Text="Cyclic Tx" />
+          <TextBlock Classes="value" Text="{Binding CyclicTxRate}" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Margin="0,0,12,12">
+        <StackPanel>
+          <TextBlock Classes="label" Text="Queued Tx" />
+          <TextBlock Classes="value" Text="{Binding QueuedTxRate}" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Margin="0,0,12,12">
+        <StackPanel>
+          <TextBlock Classes="label" Text="Rx" />
+          <TextBlock Classes="value" Text="{Binding RxRate}" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Margin="0,0,12,12">
+        <StackPanel>
+          <TextBlock Classes="label" Text="Cycle time" />
+          <TextBlock Classes="value" Text="{Binding CycleTime}" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Margin="0,0,12,12">
+        <StackPanel>
+          <TextBlock Classes="label" Text="WKC mismatches" />
+          <TextBlock Classes="value" Text="{Binding WkcMismatches}" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Margin="0,0,12,12">
+        <StackPanel>
+          <TextBlock Classes="label" Text="Suspected lost (idx)" />
+          <TextBlock Classes="value" Text="{Binding LostFrames}" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Margin="0,0,12,12">
+        <StackPanel>
+          <TextBlock Classes="label" Text="Ring lost frames" />
+          <TextBlock Classes="value" Text="{Binding RingLostFrames}" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Margin="0,0,12,12">
+        <StackPanel>
+          <TextBlock Classes="label" Text="Frames" />
+          <TextBlock Classes="value" Text="{Binding FrameTotals}" FontSize="16" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Margin="0,0,12,12">
+        <StackPanel>
+          <TextBlock Classes="label" Text="Malformed" />
+          <TextBlock Classes="value" Text="{Binding Malformed}" />
+        </StackPanel>
+      </Border>
+    </WrapPanel>
+  </ScrollViewer>
+</UserControl>

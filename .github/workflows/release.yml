@@ -1,0 +1,270 @@
+# Release pipeline for OpenEC-Diagnostics
+# NOTE: SHA-pinning of actions is left as an optional hardening step for later.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  build:
+    name: build (${{ matrix.rid }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            os: win
+            arch: x64
+            runner: windows-latest
+          - rid: win-arm64
+            os: win
+            arch: arm64
+            runner: windows-latest
+          - rid: linux-x64
+            os: linux
+            arch: x64
+            runner: ubuntu-latest
+          - rid: linux-arm64
+            os: linux
+            arch: arm64
+            runner: ubuntu-latest
+          - rid: osx-x64
+            os: osx
+            arch: x64
+            runner: macos-latest
+          - rid: osx-arm64
+            os: osx
+            arch: arm64
+            runner: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Derive version from tag
+        id: version
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version $VERSION"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Install nuget-license tool
+        shell: bash
+        run: |
+          dotnet tool install --global nuget-license
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Generate THIRD-PARTY-NOTICES.txt
+        shell: bash
+        run: |
+          echo "# Third-Party Notices" > THIRD-PARTY-NOTICES.txt
+          echo "" >> THIRD-PARTY-NOTICES.txt
+          echo "## OpenEC CLI" >> THIRD-PARTY-NOTICES.txt
+          nuget-license -i src/OpenEC.CLI/OpenEC.CLI.csproj -t -o Table --include-transitive >> THIRD-PARTY-NOTICES.txt || echo "No CLI dependencies" >> THIRD-PARTY-NOTICES.txt
+          echo "" >> THIRD-PARTY-NOTICES.txt
+          echo "## OpenEC Inspector" >> THIRD-PARTY-NOTICES.txt
+          nuget-license -i src/OpenEC.Inspector/OpenEC.Inspector.csproj -t -o Table --include-transitive >> THIRD-PARTY-NOTICES.txt || echo "No Inspector dependencies" >> THIRD-PARTY-NOTICES.txt
+
+      - name: Publish CLI
+        run: dotnet publish src/OpenEC.CLI -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o out/cli-${{ matrix.rid }}
+
+      - name: Publish Inspector
+        run: dotnet publish src/OpenEC.Inspector -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o out/inspector-${{ matrix.rid }}
+
+      - name: Create CLI archive (Linux/macOS)
+        if: matrix.os != 'win'
+        shell: bash
+        run: |
+          mkdir -p stage/cli
+          if [ "${{ matrix.os }}" = "linux" ]; then
+            cp out/cli-${{ matrix.rid }}/openec stage/cli/
+          else
+            cp out/cli-${{ matrix.rid }}/openec stage/cli/
+          fi
+          cp LICENSE NOTICE THIRD-PARTY-NOTICES.txt stage/cli/
+          cd stage/cli
+          tar -czf ../../openec-${{ steps.version.outputs.VERSION }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz .
+
+      - name: Create CLI archive (Windows)
+        if: matrix.os == 'win'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path stage/cli
+          Copy-Item out/cli-${{ matrix.rid }}/openec.exe stage/cli/
+          Copy-Item LICENSE, NOTICE, THIRD-PARTY-NOTICES.txt stage/cli/
+          Compress-Archive -Path stage/cli/* -DestinationPath openec-${{ steps.version.outputs.VERSION }}-${{ matrix.os }}-${{ matrix.arch }}.zip
+
+      - name: Create Inspector archive (Linux)
+        if: matrix.os == 'linux'
+        shell: bash
+        run: |
+          mkdir -p stage/inspector
+          cp out/inspector-${{ matrix.rid }}/OpenEC.Inspector stage/inspector/
+          cp LICENSE NOTICE THIRD-PARTY-NOTICES.txt stage/inspector/
+          cd stage/inspector
+          tar -czf ../../OpenEC.Inspector-${{ steps.version.outputs.VERSION }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz .
+
+      - name: Create Inspector .app bundle (macOS)
+        if: matrix.os == 'osx'
+        shell: bash
+        run: |
+          mkdir -p stage/inspector/OpenEC.Inspector.app/Contents/{MacOS,Resources}
+          cp out/inspector-${{ matrix.rid }}/OpenEC.Inspector stage/inspector/OpenEC.Inspector.app/Contents/MacOS/
+          if [ -f src/OpenEC.Inspector/Assets/openec.icns ]; then
+            cp src/OpenEC.Inspector/Assets/openec.icns stage/inspector/OpenEC.Inspector.app/Contents/Resources/
+          fi
+          cat > stage/inspector/OpenEC.Inspector.app/Contents/Info.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleIdentifier</key>
+            <string>io.pichu.openec.inspector</string>
+            <key>CFBundleName</key>
+            <string>OpenEC Inspector</string>
+            <key>CFBundleExecutable</key>
+            <string>OpenEC.Inspector</string>
+            <key>CFBundleIconFile</key>
+            <string>openec.icns</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>NSHighResolutionCapable</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
+          cp LICENSE NOTICE THIRD-PARTY-NOTICES.txt stage/inspector/
+          cd stage/inspector
+          tar -czf ../../OpenEC.Inspector-${{ steps.version.outputs.VERSION }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz .
+
+      # Code signing and notarization for macOS would run here if secrets are present
+      - name: macOS code signing note
+        if: matrix.os == 'osx'
+        shell: bash
+        run: |
+          if [ -z "${{ secrets.MACOS_CERT }}" ]; then
+            echo "⚠️  macOS code signing skipped (secrets not configured)."
+            echo "Users will need to run: xattr -d com.apple.quarantine OpenEC.Inspector.app"
+          fi
+
+      - name: Create Inspector archive (Windows)
+        if: matrix.os == 'win'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path stage/inspector
+          Copy-Item out/inspector-${{ matrix.rid }}/OpenEC.Inspector.exe stage/inspector/
+          Copy-Item LICENSE, NOTICE, THIRD-PARTY-NOTICES.txt stage/inspector/
+          Compress-Archive -Path stage/inspector/* -DestinationPath OpenEC.Inspector-${{ steps.version.outputs.VERSION }}-${{ matrix.os }}-${{ matrix.arch }}.zip
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-${{ matrix.rid }}
+          path: |
+            *.tar.gz
+            *.zip
+          retention-days: 7
+
+  release:
+    name: create release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Compute SHA256SUMS
+        shell: bash
+        run: |
+          cd artifacts
+          sha256sum * > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
+          body: |
+            ## Verification
+
+            All release archives are included in `SHA256SUMS`. Verify downloads:
+            ```bash
+            sha256sum -c SHA256SUMS --ignore-missing
+            ```
+
+            ## macOS Gatekeeper
+
+            The macOS `.app` bundle is unsigned. First-run requires:
+            ```bash
+            xattr -d com.apple.quarantine OpenEC.Inspector.app
+            ```
+
+  nuget:
+    name: publish nuget packages
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    # Trusted Publishing (OIDC): no API key secret. id-token:write lets NuGet/login
+    # exchange the workflow's OIDC token for a short-lived push key. Requires a trusted-
+    # publisher policy on nuget.org bound to this repo + workflow, and a NUGET_USER repo variable.
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Pack OpenEC.Monitor
+        run: dotnet pack src/OpenEC.Monitor -c Release -o nupkg
+
+      - name: Pack OpenEC.Monitor.Ads
+        run: dotnet pack src/OpenEC.Monitor.Ads -c Release -o nupkg
+
+      - name: NuGet trusted publishing login
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Push to NuGet
+        run: dotnet nuget push "nupkg/*.nupkg" --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
