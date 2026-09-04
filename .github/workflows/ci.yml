@@ -40,6 +40,19 @@ jobs:
             8.0.x
             10.0.x
 
+      # SharpPcap needs the native wpcap runtime even to read a capture file offline.
+      # ubuntu and macOS ship libpcap; Windows does not, so install Npcap. 0.96 is the
+      # last public build with a silent installer — the method SharpPcap's own CI uses.
+      - name: Install Npcap (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $exe = "$env:RUNNER_TEMP\npcap.exe"
+          Invoke-WebRequest "https://github.com/secdev/secdev.github.io/raw/refs/heads/master/public/ci/npcap-0.96.exe" -UseBasicParsing -OutFile $exe
+          $sum = (Get-FileHash $exe -Algorithm SHA256).Hash.ToLower()
+          if ($sum -ne "83667e1306fdcf7f9967c10277b36b87e50ee8812e1ee2bb9443bdd065dc04a1") { throw "Npcap checksum mismatch: $sum" }
+          Start-Process $exe -ArgumentList "/loopback_support=yes /winpcap_mode /S" -Wait
+
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
