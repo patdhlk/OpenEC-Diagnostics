@@ -17,6 +17,16 @@ don't have hardware in front of you yet).
 > which produces `publish/openec` (macOS/Linux) or `publish\openec.exe`
 > (Windows).
 
+## Recommended TAPs
+
+Any fully-passive Fast-Ethernet (100BASE-TX) copper TAP that aggregates both
+directions onto one monitor port works with `openec`. Known-good options:
+
+- **Dualcomm** — Zero-Delay Fast Ethernet Copper TAP, ETAP-1000 (wired below)
+- **Profitap** — ProfiShark 100M
+- **Profitap** — ProfiShark 1G
+- **Beckhoff** — ET2000 Industrial-Ethernet Multi-Channel Probe (EtherCAT-native)
+
 ## Runtime prerequisites
 
 Live capture and even offline pcap reading both load a native pcap library:

@@ -139,6 +139,23 @@ into the EtherCAT segment. See **[docs/tap-setup.md](docs/tap-setup.md)**
 for the full wiring diagram, macOS/Linux/Windows permission setup, a
 verification walkthrough, and how to export `ENI.xml` from TwinCAT.
 
+## 🔌 Recommended TAP Devices
+
+A fully-passive Fast-Ethernet (100BASE-TX) copper TAP that aggregates both
+directions of the link onto a single monitor port is all OpenEC-Diagnostics
+needs — it works out which frames are outbound and which are the returning echo
+on its own. Recommended devices:
+
+| Vendor | Model | Link speed |
+| --- | --- | --- |
+| Dualcomm | Zero-Delay Fast Ethernet Copper TAP — ETAP-1000 | 100 Mbit |
+| Profitap | ProfiShark 100M | 100 Mbit |
+| Profitap | ProfiShark 1G | 1 Gbit |
+| Beckhoff | ET2000 Industrial-Ethernet Multi-Channel Probe | 100 Mbit (EtherCAT-native) |
+
+See **[docs/tap-setup.md](docs/tap-setup.md)** for the wiring diagram, capture
+permissions, and an end-to-end verification walkthrough.
+
 ## 🔍 OpenEC.Inspector (GUI)
 
 A cross-platform Avalonia desktop app over the same SDK:
