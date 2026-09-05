@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the version is below `1.0.0`, the public API of `OpenEC.Monitor` may
 change in any minor release.
 
+## [0.1.1] - 2026-09-05
+
+### Fixed
+
+- Inspector UI text is no longer invisible on Windows. The theme pinned the
+  window font to "Segoe UI", which Windows 11 maps to the variable "Segoe UI
+  Variable Text" that Avalonia 12 fails to shape, so every label, button, and
+  tree row rendered blank while shapes still drew. The application now defaults
+  to the bundled Inter font on every platform.
+
 ## [0.1.0] - 2026-09-04
 
 ### Added
@@ -102,4 +112,5 @@ change in any minor release.
 - **`OpenEC.Monitor.Ads`**, optional read-only TwinCAT master enrichment
   over ADS.
 
+[0.1.1]: https://github.com/patdhlk/OpenEC-Diagnostics/releases/tag/v0.1.1
 [0.1.0]: https://github.com/patdhlk/OpenEC-Diagnostics/releases/tag/v0.1.0
