@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the version is below `1.0.0`, the public API of `OpenEC.Monitor` may
 change in any minor release.
 
-## [Unreleased]
+## [0.1.2] - 2026-09-05
 
 ### Fixed
 
@@ -122,5 +122,6 @@ change in any minor release.
 - **`OpenEC.Monitor.Ads`**, optional read-only TwinCAT master enrichment
   over ADS.
 
+[0.1.2]: https://github.com/patdhlk/OpenEC-Diagnostics/releases/tag/v0.1.2
 [0.1.1]: https://github.com/patdhlk/OpenEC-Diagnostics/releases/tag/v0.1.1
 [0.1.0]: https://github.com/patdhlk/OpenEC-Diagnostics/releases/tag/v0.1.0
