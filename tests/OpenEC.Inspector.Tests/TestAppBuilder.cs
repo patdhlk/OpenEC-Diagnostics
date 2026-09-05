@@ -16,8 +16,5 @@ public class TestAppBuilder
 {
     public static AppBuilder BuildAvaloniaApp() => AppBuilder
         .Configure<App>()
-        // Mirror the desktop font config (Program.BuildAvaloniaApp) so smoke tests exercise the
-        // same bundled-Inter default the shipped app uses.
-        .WithAppFonts()
         .UseHeadless(new AvaloniaHeadlessPlatformOptions());
 }

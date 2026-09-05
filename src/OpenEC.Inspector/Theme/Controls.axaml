@@ -1,8 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <!-- Font family is pinned app-wide to the bundled Inter (see Program.BuildAvaloniaApp): no
-       Window-level FontFamily override, so popups/tooltips/menus inherit the same shipped font. -->
   <Style Selector="Window">
+    <Setter Property="FontFamily" Value="Segoe UI, Helvetica Neue, Arial" />
     <Setter Property="Background" Value="{DynamicResource Bg}" />
   </Style>
 

@@ -7,15 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the version is below `1.0.0`, the public API of `OpenEC.Monitor` may
 change in any minor release.
 
-## [0.1.1] - 2026-09-05
+## [Unreleased]
 
 ### Fixed
 
-- Inspector UI text is no longer invisible on Windows. The theme pinned the
-  window font to "Segoe UI", which Windows 11 maps to the variable "Segoe UI
-  Variable Text" that Avalonia 12 fails to shape, so every label, button, and
-  tree row rendered blank while shapes still drew. The application now defaults
-  to the bundled Inter font on every platform.
+- Inspector UI text is no longer invisible on Windows. The real cause was the
+  GPU text path — Avalonia 12.1's default Windows backend (ANGLE, after the
+  SkiaSharp 3.119 bump) rasterises geometry but drops glyph runs on some
+  drivers, so every label rendered blank while borders and buttons still drew.
+  The Inspector now forces Skia's software renderer on Windows. The ineffective
+  0.1.1 font-default change is reverted, restoring the native system fonts.
+  macOS and Linux are unaffected.
+
+## [0.1.1] - 2026-09-05
+
+### Changed
+
+- Defaulted the Inspector UI to the bundled Inter font as an attempt to fix
+  invisible text on Windows. This did not resolve the regression and was
+  reverted in 0.1.2, which carries the actual fix.
 
 ## [0.1.0] - 2026-09-04
 
