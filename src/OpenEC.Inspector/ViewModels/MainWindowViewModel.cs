@@ -2,6 +2,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OpenEC.Inspector.Session;
+using OpenEC.Monitor;
 using OpenEC.Monitor.Eni;
 using OpenEC.Monitor.Learning;
 using OpenEC.Monitor.Observation;
@@ -43,6 +44,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public DashboardViewModel? Dashboard { get; private set; }
     public ExplorerViewModel? Explorer { get; private set; }
     public EventsViewModel? Events { get; private set; }
+    public IReadOnlyList<SegmentPipeline> Segments => Session?.Segments ?? [];
+    public bool HasMultipleSegments => Segments.Count > 1;
+
+    [ObservableProperty] private SegmentPipeline? _selectedSegment;
+
+    public static string SegmentLabel(SegmentPipeline s) =>
+        s.Port < 0 ? "Segment" : $"ESL port {s.Port}";
 
     [ObservableProperty] private object _currentPage;
     [ObservableProperty] private bool _hasSession;
@@ -101,6 +109,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Dashboard = new DashboardViewModel(session);
         _editorCache.Clear();
         _processImagePage = null;
+        SelectedSegment = session.Segments[0];
+        OnPropertyChanged(nameof(Segments));
+        OnPropertyChanged(nameof(HasMultipleSegments));
         _stateChangedHandler = state => _marshal(() =>
         {
             if (!ReferenceEquals(Session, session)) return;
@@ -114,6 +125,18 @@ public sealed partial class MainWindowViewModel : ObservableObject
         // A fault can land between StartViewModel's probe and this subscription; catch up so the banner isn't lost.
         if (session.State == SessionState.Faulted) FaultMessage = session.Fault?.Message;
         Explorer.SelectedNode = Explorer.Root; // drives CurrentPage = Dashboard through the callback
+        Tick();
+    }
+
+    partial void OnSelectedSegmentChanged(SegmentPipeline? value)
+    {
+        if (value is null || Session is null) return;
+        Session.SelectedSegment = value;
+        _editorCache.Clear();
+        _processImagePage = null;
+        _assignmentRevision = null;
+        Explorer?.Refresh();
+        if (Explorer is not null) OnNodeSelected(Explorer.SelectedNode);
         Tick();
     }
 
@@ -165,6 +188,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
     /// <summary>Called by the view's DispatcherTimer every 250 ms (4 Hz).</summary>
     public void Tick()
     {
+        // New ESL ports can appear mid-capture, so refresh segment picker
+        OnPropertyChanged(nameof(Segments));
+        OnPropertyChanged(nameof(HasMultipleSegments));
+        if (SelectedSegment is not null && Session is not null && !Session.Segments.Contains(SelectedSegment))
+        {
+            SelectedSegment = Session.Segments[0];
+        }
         RefreshAssignmentIfLearned();
         RefreshSaveLearnedEniAvailability();
         Explorer?.Refresh();

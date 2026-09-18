@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using OpenEC.Monitor.Capture;
+using OpenEC.Monitor.Eni;
 using OpenEC.Monitor.Learning;
 using OpenEC.Monitor.Protocol;
 using Spectre.Console;
@@ -31,39 +32,78 @@ public sealed class LearnCommand : AsyncCommand<LearnCommand.Settings>
     {
         try
         {
-            var learner = new BusLearner(settings.EsiDirectory);
+            var learners = new Dictionary<int, BusLearner>();
             await using var source = new PcapFileSource(settings.Capture);
             await foreach (var frame in source.CaptureAsync(cancellationToken))
-                learner.Observe(frame.Timestamp, EtherCatFrameParser.Parse(frame.Data));
-            await learner.ResolveSchemasAsync(cancellationToken);
+            {
+                var decoded = EtherCatFrameParser.Parse(frame.Data);
+                int port = decoded is FrameDecodeResult.Success { Frame.Esl: { } e } ? e.Port : -1;
+                if (!learners.TryGetValue(port, out var learner))
+                {
+                    learner = new BusLearner(settings.EsiDirectory);
+                    learners[port] = learner;
+                }
+                learner.Observe(frame.Timestamp, decoded);
+            }
 
-            if (learner.Current is not { } learned)
+            foreach (var learner in learners.Values)
+                await learner.ResolveSchemasAsync(cancellationToken);
+
+            var learned = learners.Where(kv => kv.Value.Current is not null)
+                .ToDictionary(kv => kv.Key, kv => kv.Value.Current!);
+
+            if (learned.Count == 0)
             {
                 AnsiConsole.MarkupLine("[yellow]Learned nothing:[/] no EtherCAT slaves observed.");
                 return 1;
             }
 
-            // Write before reporting: a failed --out must not leave a success-looking table
-            // above the error, which reads as "learned, and saved" when nothing was saved.
             if (settings.Output is { } output)
             {
-                EniXmlWriter.Write(learned.Configuration, output);
-                AnsiConsole.MarkupLineInterpolated($"Wrote [green]{output}[/]");
+                if (learned.Count == 1 && learned.ContainsKey(-1))
+                {
+                    EniXmlWriter.Write(learned[-1].Configuration, output);
+                    AnsiConsole.MarkupLineInterpolated($"Wrote [green]{output}[/]");
+                }
+                else
+                {
+                    foreach (var (port, config) in learned.OrderBy(kv => kv.Key))
+                    {
+                        var portPath = InsertPortIntoPath(output, port);
+                        EniXmlWriter.Write(config.Configuration, portPath);
+                        AnsiConsole.MarkupLineInterpolated($"Wrote [green]{portPath}[/]");
+                    }
+                }
             }
-            Report(learned);
+
+            if (learned.Count == 1 && learned.ContainsKey(-1))
+            {
+                Report(learned[-1]);
+            }
+            else
+            {
+                foreach (var (port, config) in learned.OrderBy(kv => kv.Key))
+                {
+                    AnsiConsole.MarkupLineInterpolated($"[bold]ESL port {port}[/]");
+                    Report(config);
+                }
+            }
             return 0;
         }
         catch (Exception ex)
         {
-            // CLI boundary: a corrupt pcap (SharpPcap), an unreadable capture (IOException) or an
-            // unwritable --out path (XDocument.Save throwing ArgumentException/NotSupportedException)
-            // must map to exit 2 (usage/IO failure), not the default unhandled-exception exit 255.
-            // Deliberately bare, as in AnalyzeCommand and FramesCommand: a filtered list is a list
-            // of the failures we happened to think of, and everything it misses escapes the
-            // documented 0/1/2 contract.
             AnsiConsole.MarkupLineInterpolated($"[red]error:[/] {ex.Message}");
             return 2;
         }
+    }
+
+    private static string InsertPortIntoPath(string path, int port)
+    {
+        var dir = Path.GetDirectoryName(path) ?? "";
+        var fileName = Path.GetFileNameWithoutExtension(path);
+        var ext = Path.GetExtension(path);
+        var portName = $"{fileName}.port{port}{ext}";
+        return string.IsNullOrEmpty(dir) ? portName : Path.Combine(dir, portName);
     }
 
     private static void Report(LearnedConfiguration learned)

@@ -8,6 +8,7 @@
   <Window.Resources>
     <views:StatusDotBrushConverter x:Key="DotBrush" />
     <views:GridLengthConverter x:Key="GridLength" />
+    <views:SegmentLabelConverter x:Key="SegmentLabel" />
   </Window.Resources>
 
   <Window.DataTemplates>
@@ -106,7 +107,19 @@
           <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <views:ExplorerView DataContext="{Binding Explorer}" />
+        <DockPanel>
+          <ComboBox DockPanel.Dock="Top" Margin="8,8,8,6"
+                    IsVisible="{Binding HasMultipleSegments}"
+                    ItemsSource="{Binding Segments}"
+                    SelectedItem="{Binding SelectedSegment, Mode=TwoWay}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Converter={StaticResource SegmentLabel}}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <views:ExplorerView DataContext="{Binding Explorer}" />
+        </DockPanel>
         <GridSplitter Grid.Column="1" Width="4" ResizeDirection="Columns"
                       Background="{DynamicResource Line}" />
         <Grid Grid.Column="2" RowDefinitions="*,Auto">

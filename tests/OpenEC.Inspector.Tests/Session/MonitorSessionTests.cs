@@ -1,6 +1,8 @@
 using OpenEC.Inspector.Session;
 using OpenEC.Monitor;
 using OpenEC.Monitor.Learning;
+using OpenEC.Monitor.Protocol;
+using OpenEC.Monitor.Synthesis;
 
 namespace OpenEC.Inspector.Tests.Session;
 
@@ -41,6 +43,37 @@ public class MonitorSessionTests
 
         Assert.Equal(Path.GetFileName(path), session.SourceDescription);
         Assert.Equal(new SourceSpec.File(path), session.Source);
+    }
+
+    [Fact]
+    public async Task Selecting_a_segment_swaps_the_observed_bus()
+    {
+        byte[] Outbound(ushort adp) => new EtherCatFrameBuilder()
+            .AddPhysical(EtherCatCommand.Fprd, 1, adp, 0x0130, new byte[] { 0x00, 0x00 }, 0).Build();
+        byte[] Returning(ushort adp) => new EtherCatFrameBuilder().AsReturning()
+            .AddPhysical(EtherCatCommand.Fprd, 1, adp, 0x0130, new byte[] { 0x08, 0x00 }, 1).Build();
+        var t = new DateTimeOffset(2026, 9, 18, 12, 0, 0, TimeSpan.Zero);
+        var path = Path.Combine(Path.GetTempPath(), $"openec-inspector-esl-{Guid.NewGuid():N}.pcap");
+        PcapFileWriter.Write(path, new List<(DateTimeOffset, byte[])>
+        {
+            (t, EslWrapper.Prefix(Outbound(1001), 0)),
+            (t, EslWrapper.Prefix(Outbound(2002), 1)),
+            (t.AddMicroseconds(50), EslWrapper.Prefix(Returning(1001), 0)),
+            (t.AddMicroseconds(50), EslWrapper.Prefix(Returning(2002), 1)),
+        });
+        try
+        {
+            await using var session = new MonitorSession(new SourceSpec.File(path));
+            session.Start();
+            await session.Completion;
+
+            Assert.Equal(2, session.Segments.Count);
+            session.SelectedSegment = session.Segments.Single(s => s.Port == 0);
+            Assert.Equal((ushort)1001, session.Observer.SnapshotSlaves().Single().Address);
+            session.SelectedSegment = session.Segments.Single(s => s.Port == 1);
+            Assert.Equal((ushort)2002, session.Observer.SnapshotSlaves().Single().Address);
+        }
+        finally { File.Delete(path); }
     }
 
     [Fact]

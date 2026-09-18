@@ -64,17 +64,19 @@ public sealed record AnalysisReport(
     IReadOnlyList<string> Events,
     [property: System.Text.Json.Serialization.JsonIgnore(
         Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    int? Port,
+    [property: System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     LearningReport? Learning,
     HealthReport Health)
 {
     public bool HasBusErrors =>
         WkcMismatches > 0 || Emergencies > 0 || SoeErrors > 0 || Slaves.Any(s => s.Error);
 
-    public static AnalysisReport Build(string file, EtherCatMonitor monitor)
+    public static AnalysisReport Build(string file, SegmentPipeline segment, TrafficStatistics stats)
     {
-        var stats = monitor.Observer.Statistics;
-        var log = monitor.Observer.EventLog;
-        var learning = monitor.Learned is { } learned
+        var log = segment.Observer.EventLog;
+        var learning = segment.Learned is { } learned
             ? new LearningReport(
                 learned.Completeness.SawStartup,
                 learned.Completeness.Slaves.Count(s => s.IsComplete),
@@ -86,9 +88,9 @@ public sealed record AnalysisReport(
                 learned.Provenance.ToDictionary(
                     kv => kv.Key.ToString(CultureInfo.InvariantCulture),
                     kv => $"identity={kv.Value.Identity}, names={kv.Value.Names}, mapping={kv.Value.Mapping}"),
-                ConfigurationSourceOf(monitor))
+                ConfigurationSourceOf(segment))
             : null;
-        var health = monitor.SnapshotHealth();
+        var health = segment.Observer.SnapshotHealth();
         return new AnalysisReport(
             file,
             stats.TotalFrames,
@@ -102,13 +104,14 @@ public sealed record AnalysisReport(
             stats.WkcMismatches,
             log.Count(e => e is MonitorEvent.EmergencyReceived),
             log.Count(e => e is MonitorEvent.SoeErrorReceived),
-            monitor.Observer.Bus.BusState.ToString(),
-            monitor.Observer.Bus.Slaves
+            segment.Observer.Bus.BusState.ToString(),
+            segment.Observer.Bus.Slaves
                 .OrderBy(s => s.Address)
                 .Select(s => new SlaveReport(s.Address, s.DisplayName, s.AlState.ToString(),
                     s.ErrorFlag, s.AlStatusCode?.ToString("X4")))
                 .ToList(),
             log.Select(Describe).ToList(),
+            segment.Port < 0 ? (int?)null : segment.Port,
             learning,
             new HealthReport(
                 health.Level.ToString(),
@@ -129,8 +132,8 @@ public sealed record AnalysisReport(
     /// A later revision that this capture learned in full does replace a cache hit, and then the
     /// provenance is the learner's again and this reports "observed". That is the honest answer: the
     /// configuration in force at the end is the one the capture itself produced.</summary>
-    private static string? ConfigurationSourceOf(EtherCatMonitor monitor) =>
-        monitor.Observer.Applied is not { } applied
+    private static string? ConfigurationSourceOf(SegmentPipeline segment) =>
+        segment.Observer.Applied is not { } applied
             ? null
             : applied.Provenance.Count > 0
               && applied.Provenance.Values.All(p =>

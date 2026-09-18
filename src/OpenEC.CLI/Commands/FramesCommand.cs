@@ -26,6 +26,10 @@ public sealed class FramesCommand : AsyncCommand<FramesCommand.Settings>
         [CommandOption("--count")]
         [Description("Stop after this many datagram lines")]
         public int Count { get; init; } = int.MaxValue;
+
+        [CommandOption("--port")]
+        [Description("Only frames from this CU2508 ESL downlink port")]
+        public int? Port { get; init; }
     }
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
@@ -56,6 +60,8 @@ public sealed class FramesCommand : AsyncCommand<FramesCommand.Settings>
             {
                 frameNo++;
                 if (EtherCatFrameParser.Parse(raw.Data) is not FrameDecodeResult.Success ok) continue;
+                if (settings.Port is { } wantPort && (ok.Frame.Esl?.Port ?? -1) != wantPort) continue;
+                var esl = ok.Frame.Esl is { } e ? $"p{e.Port} " : "";
                 var dir = direction.Classify(ok.Frame) == FrameDirection.Outbound ? "->" : "<-";
                 foreach (var d in ok.Frame.Datagrams)
                 {
@@ -65,7 +71,7 @@ public sealed class FramesCommand : AsyncCommand<FramesCommand.Settings>
                         ? $"log 0x{d.LogicalAddress:X8}"
                         : $"adp {d.Adp} ado 0x{d.Ado:X4}";
                     AnsiConsole.MarkupLineInterpolated(
-                        $"#{frameNo,5} {raw.Timestamp:HH:mm:ss.ffffff} {dir} {d.Command,-5} idx {d.Index,3} {addr} len {d.Payload.Length,4} wkc {d.WorkingCounter}");
+                        $"#{frameNo,5} {raw.Timestamp:HH:mm:ss.ffffff} {esl}{dir} {d.Command,-5} idx {d.Index,3} {addr} len {d.Payload.Length,4} wkc {d.WorkingCounter}");
                     if (++printed >= settings.Count) return 0;
                 }
             }

@@ -8,7 +8,13 @@ namespace OpenEC.Monitor.Capture;
 /// <summary>Captures EtherCAT frames from a live interface (e.g. the TAP monitor port NIC).</summary>
 public sealed class LiveCaptureSource(string interfaceName) : ICaptureSource
 {
-    public const string BpfFilter = "ether proto 0x88a4 or (vlan and ether proto 0x88a4)";
+    // Plain EtherCAT (ethertype 0x88a4, optionally VLAN-tagged) plus CU2508 prefix-ESL, whose
+    // gigabit frames carry the Beckhoff ESL cookie in the destination-MAC slot (0x88a4 sits buried
+    // 16 bytes in, so the ethertype term alone never matches them). Postfix-ESL (ET2000) still
+    // matches the ethertype term. The fourth cookie octet is 0x10 or 0x11.
+    public const string BpfFilter =
+        "ether proto 0x88a4 or (vlan and ether proto 0x88a4) "
+        + "or ether dst 01:01:05:10:00:00 or ether dst 01:01:05:11:00:00";
 
     private LibPcapLiveDevice? _device;
 

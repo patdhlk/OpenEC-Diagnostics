@@ -49,18 +49,34 @@ public sealed class MonitorSession : IAsyncDisposable
             LearnedCache = LearnedBusCache.Default(),
         });
     }
+    public IReadOnlyList<SegmentPipeline> Segments => _monitor.Segments;
 
-    public BusObserver Observer => _monitor.Observer;
+    private SegmentPipeline? _selectedSegment;
+
+    public SegmentPipeline SelectedSegment
+    {
+        get
+        {
+            var s = Segments;
+            if (_selectedSegment is null || !s.Contains(_selectedSegment))
+                _selectedSegment = s[0];
+            return _selectedSegment;
+        }
+        set => _selectedSegment = value;
+    }
+
+
+    public BusObserver Observer => SelectedSegment.Observer;
 
     /// <summary>What the learner has derived from this capture, independent of whether the observer
     /// was rebound to it. With an ENI loaded the ENI stays the authority and
     /// <see cref="BusObserver.Applied"/> is null all session by design — but the learner still ran,
     /// and this is where its result lives. Surfaces that export or describe the reconstruction must
     /// read it here, or they go silent for every ENI-loaded session.</summary>
-    public LearnedConfiguration? Learned => _monitor.Learned;
+    public LearnedConfiguration? Learned => SelectedSegment.Learned;
 
-    public TrafficStatistics Statistics => _monitor.Statistics;
-    public ProcessImage ProcessImage => _monitor.ProcessImage;
+    public TrafficStatistics Statistics => SelectedSegment.Observer.Statistics;
+    public ProcessImage ProcessImage => SelectedSegment.Observer.ProcessImage;
     public EniConfiguration? Eni { get; }
     public SourceSpec? Source { get; }
     public string? RecordPath => Source?.RecordPath;
@@ -68,8 +84,8 @@ public sealed class MonitorSession : IAsyncDisposable
     public SessionState State { get; private set; } = SessionState.Idle;
     public Exception? Fault { get; private set; }
     public Task Completion => _done.Task;
-    public long FramesSeen => Statistics.TotalFrames;
-    public long MalformedFrames => Statistics.MalformedFrames;
+    public long FramesSeen => Segments.Sum(s => s.Observer.Statistics.TotalFrames);
+    public long MalformedFrames => Segments.Sum(s => s.Observer.Statistics.MalformedFrames);
 
     /// <summary>Raised from the pump thread, synchronously, before <see cref="Completion"/> resolves —
     /// subscribers always observe the terminal state first. UI subscribers must marshal to their own

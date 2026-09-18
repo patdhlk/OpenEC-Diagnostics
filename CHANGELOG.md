@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the version is below `1.0.0`, the public API of `OpenEC.Monitor` may
 change in any minor release.
 
+## [Unreleased]
+
+### Added
+
+- Beckhoff **CU2508** real-time Ethernet port multiplier support. The monitor now
+  strips the EtherCAT Switch Link (ESL) wrapper a CU2508 uplink carries and
+  demultiplexes the up-to-eight independent EtherCAT segments it multiplexes onto
+  one gigabit link — one pipeline per ESL downlink port, each with its own bus
+  model, topology, process image and learned configuration, so segments that reuse
+  station addresses no longer collide. Live capture now matches the ESL cookie MAC;
+  `openec frames --port` filters by port and `analyze`/`learn` report per segment;
+  the Inspector gains a segment picker. Plain (non-CU2508) captures are unchanged.
+  The same decoder also reads the ET2000 probe's postfix ESL framing.
+
 ## [0.1.2] - 2026-09-05
 
 ### Fixed

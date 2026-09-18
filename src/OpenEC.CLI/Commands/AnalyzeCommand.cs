@@ -64,19 +64,39 @@ public sealed class AnalyzeCommand : AsyncCommand<AnalyzeCommand.Settings>
             });
             await monitor.RunAsync(cancellationToken);
 
-            var report = AnalysisReport.Build(settings.File, monitor);
-            if (settings.Json)
+            var segments = monitor.Segments;
+            if (segments.Count == 1 && segments[0].Port < 0)
             {
-                // Write directly to the underlying writer instead of AnsiConsole.WriteLine: Spectre
-                // word-wraps Text renderables to the console width, which would inject stray
-                // newlines into long JSON string values (e.g. the file path) and corrupt the output.
-                var writer = AnsiConsole.Console.Profile.Out.Writer;
-                writer.Write(JsonSerializer.Serialize(report, JsonOptions));
-                writer.Write('\n');
+                var report = AnalysisReport.Build(settings.File, segments[0], monitor.Statistics);
+                if (settings.Json)
+                {
+                    var writer = AnsiConsole.Console.Profile.Out.Writer;
+                    writer.Write(JsonSerializer.Serialize(report, JsonOptions));
+                    writer.Write('\n');
+                }
+                else
+                    Render(report);
+                return report.HasBusErrors ? 1 : 0;
             }
             else
-                Render(report);
-            return report.HasBusErrors ? 1 : 0;
+            {
+                var reports = segments.Select(seg => AnalysisReport.Build(settings.File, seg, monitor.Statistics)).ToList();
+                if (settings.Json)
+                {
+                    var writer = AnsiConsole.Console.Profile.Out.Writer;
+                    writer.Write(JsonSerializer.Serialize(reports, JsonOptions));
+                    writer.Write('\n');
+                }
+                else
+                {
+                    foreach (var report in reports)
+                    {
+                        AnsiConsole.Write(new Rule($"[bold]ESL port {report.Port}[/]").LeftJustified());
+                        Render(report);
+                    }
+                }
+                return reports.Any(r => r.HasBusErrors) ? 1 : 0;
+            }
         }
         catch (Exception ex)
         {

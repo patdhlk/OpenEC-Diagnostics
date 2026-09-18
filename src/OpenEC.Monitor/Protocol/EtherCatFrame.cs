@@ -4,4 +4,5 @@ public sealed record EtherCatFrame(
     MacAddress Destination,
     MacAddress Source,
     ushort? VlanId,
-    IReadOnlyList<EtherCatDatagram> Datagrams);
+    IReadOnlyList<EtherCatDatagram> Datagrams,
+    EslMetadata? Esl = null);

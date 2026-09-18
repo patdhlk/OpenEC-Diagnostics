@@ -7,6 +7,7 @@ using OpenEC.Monitor.Learning;
 using OpenEC.Monitor.Observation;
 using Spectre.Console;
 using Spectre.Console.Cli;
+using Spectre.Console.Rendering;
 
 namespace OpenEC.CLI.Commands;
 
@@ -156,7 +157,19 @@ public sealed class LiveCommand : AsyncCommand<LiveCommand.Settings>
                     {
                         while (!cts.Token.IsCancellationRequested && !pump.IsCompleted)
                         {
-                            ctx.UpdateTarget(BuildDashboard(monitor.Observer, adsSnapshot));
+                            var segments = monitor.Segments;
+                            if (segments.Count == 1 && segments[0].Port < 0)
+                                ctx.UpdateTarget(BuildDashboard(segments[0].Observer, adsSnapshot));
+                            else
+                            {
+                                var rows = new List<IRenderable>();
+                                foreach (var seg in segments)
+                                {
+                                    rows.Add(new Markup($"[bold]ESL port {seg.Port}[/]"));
+                                    rows.Add(BuildDashboard(seg.Observer, adsSnapshot));
+                                }
+                                ctx.UpdateTarget(new Rows(rows));
+                            }
                             try { await Task.Delay(250, cts.Token); }
                             catch (OperationCanceledException) { }
                         }
@@ -203,21 +216,34 @@ public sealed class LiveCommand : AsyncCommand<LiveCommand.Settings>
                     return 2;
                 }
 
-                var report = AnalysisReport.Build(settings.Interface!, monitor);
+                var segments = monitor.Segments;
+                var report = segments.Count == 1 && segments[0].Port < 0
+                    ? AnalysisReport.Build(settings.Interface!, segments[0], monitor.Statistics)
+                    : AnalysisReport.Build(settings.Interface!, segments[0], monitor.Statistics);
 
                 if (settings.LearnOut is { } learnOut)
                 {
-                    if (monitor.Learned is { } learned)
+                    var learned = segments.Where(s => s.Learned is not null)
+                        .ToDictionary(s => s.Port, s => s.Learned!);
+
+                    if (learned.Count == 0)
                     {
-                        EniXmlWriter.Write(learned.Configuration, learnOut);
+                        AnsiConsole.MarkupLineInterpolated(
+                            $"[yellow]nothing learned:[/] no ENI written to {learnOut}. The reconstruction is built from the master bringing the bus up, so it needs a session that includes startup.");
+                    }
+                    else if (learned.Count == 1 && learned.ContainsKey(-1))
+                    {
+                        EniXmlWriter.Write(learned[-1].Configuration, learnOut);
                         AnsiConsole.MarkupLineInterpolated($"Wrote learned ENI → [green]{learnOut}[/]");
                     }
                     else
                     {
-                        // Asking for an export and getting no file and no word is the same silence the
-                        // Inspector's Save button had. Say why, and say what would fix it.
-                        AnsiConsole.MarkupLineInterpolated(
-                            $"[yellow]nothing learned:[/] no ENI written to {learnOut}. The reconstruction is built from the master bringing the bus up, so it needs a session that includes startup.");
+                        foreach (var (port, config) in learned.OrderBy(kv => kv.Key))
+                        {
+                            var portPath = InsertPortIntoPath(learnOut, port);
+                            EniXmlWriter.Write(config.Configuration, portPath);
+                            AnsiConsole.MarkupLineInterpolated($"Wrote learned ENI → [green]{portPath}[/]");
+                        }
                     }
                 }
 
@@ -231,6 +257,15 @@ public sealed class LiveCommand : AsyncCommand<LiveCommand.Settings>
         {
             Console.CancelKeyPress -= onCancelKeyPress;
         }
+    }
+
+    private static string InsertPortIntoPath(string path, int port)
+    {
+        var dir = Path.GetDirectoryName(path) ?? "";
+        var fileName = Path.GetFileNameWithoutExtension(path);
+        var ext = Path.GetExtension(path);
+        var portName = $"{fileName}.port{port}{ext}";
+        return string.IsNullOrEmpty(dir) ? portName : Path.Combine(dir, portName);
     }
 
     internal static Table BuildDashboard(BusObserver observer, AdsBusSnapshot? ads)

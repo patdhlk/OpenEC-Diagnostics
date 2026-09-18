@@ -1,5 +1,6 @@
 using System.Text.Json;
 using OpenEC.Monitor.Learning;
+using OpenEC.Monitor.Protocol;
 using OpenEC.Monitor.Synthesis;
 using OpenEC.Monitor.Tests.Learning;
 
@@ -62,6 +63,43 @@ public class AnalyzeCommandTests
                 e => e.GetString()!.Contains("SoE error") && e.GetString()!.Contains("S-0-0017"));
             Assert.True(doc.RootElement.GetProperty("etherCatFrames").GetInt64() > 0);
             Assert.True(doc.RootElement.GetProperty("slaves").GetArrayLength() >= 4);
+        }
+        finally { File.Delete(path); }
+    }
+
+    // Two CU2508 downlink segments (ESL ports 0 and 1), each with one slave, multiplexed onto one
+    // uplink capture. Distinct station addresses so a demux failure would surface as one merged bus.
+    private static string TwoSegmentEslPcap()
+    {
+        byte[] Outbound(ushort adp) => new EtherCatFrameBuilder()
+            .AddPhysical(EtherCatCommand.Fprd, 1, adp, 0x0130, new byte[] { 0x00, 0x00 }, 0).Build();
+        byte[] Returning(ushort adp) => new EtherCatFrameBuilder().AsReturning()
+            .AddPhysical(EtherCatCommand.Fprd, 1, adp, 0x0130, new byte[] { 0x08, 0x00 }, 1).Build();
+        var t = new DateTimeOffset(2026, 9, 18, 12, 0, 0, TimeSpan.Zero);
+        var path = Path.Combine(Path.GetTempPath(), $"openec-analyze-esl-{Guid.NewGuid():N}.pcap");
+        PcapFileWriter.Write(path, new List<(DateTimeOffset, byte[])>
+        {
+            (t, EslWrapper.Prefix(Outbound(1001), 0)),
+            (t, EslWrapper.Prefix(Outbound(2002), 1)),
+            (t.AddMicroseconds(50), EslWrapper.Prefix(Returning(1001), 0)),
+            (t.AddMicroseconds(50), EslWrapper.Prefix(Returning(2002), 1)),
+        });
+        return path;
+    }
+
+    [Fact]
+    public void Analyze_json_emits_one_report_per_esl_segment()
+    {
+        var path = TwoSegmentEslPcap();
+        try
+        {
+            var result = App().Run("analyze", path, "--json", "--no-learn");
+            Assert.Equal(0, result.ExitCode);
+            using var doc = JsonDocument.Parse(result.Output);
+            Assert.Equal(JsonValueKind.Array, doc.RootElement.ValueKind);
+            var ports = doc.RootElement.EnumerateArray()
+                .Select(r => r.GetProperty("port").GetInt32()).OrderBy(p => p).ToArray();
+            Assert.Equal(new[] { 0, 1 }, ports);
         }
         finally { File.Delete(path); }
     }

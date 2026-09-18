@@ -8,6 +8,12 @@ public static class EtherCatFrameParser
 
     public static FrameDecodeResult Parse(ReadOnlyMemory<byte> frame)
     {
+        EslMetadata? esl = null;
+        if (EslHeader.TryPeel(frame, out var eslMeta, out var inner))
+        {
+            esl = eslMeta;
+            frame = inner;
+        }
         var span = frame.Span;
         if (span.Length < 14)
             return new FrameDecodeResult.Malformed("frame shorter than Ethernet header");
@@ -38,7 +44,7 @@ public static class EtherCatFrameParser
         try
         {
             var datagrams = DatagramParser.ParseChain(frame.Slice(offset + 2, length));
-            return new FrameDecodeResult.Success(new EtherCatFrame(dst, src, vlanId, datagrams));
+            return new FrameDecodeResult.Success(new EtherCatFrame(dst, src, vlanId, datagrams, esl));
         }
         catch (MalformedFrameException ex)
         {
