@@ -80,6 +80,13 @@ public sealed partial class StartViewModel : ObservableObject
             ? SetError("Choose an existing .pcap/.pcapng file first.")
             : StartAsync(new SourceSpec.File(PcapPath));
 
+    /// <summary>Play the chosen capture back with transport controls, rather than scanning it at full speed.</summary>
+    [RelayCommand]
+    private Task StartReplayAsync() =>
+        string.IsNullOrWhiteSpace(PcapPath) || !System.IO.File.Exists(PcapPath)
+            ? SetError("Choose an existing .pcap/.pcapng file first.")
+            : StartAsync(new SourceSpec.Replay(PcapPath));
+
     private Task SetError(string message)
     {
         ErrorMessage = message;

@@ -9,10 +9,16 @@ public abstract record SourceSpec
     public sealed record Live(string InterfaceName) : SourceSpec;
     public sealed record File(string Path) : SourceSpec;
 
+    /// <summary>A capture file played back at capture-time pacing under a shared
+    /// <see cref="OpenEC.Monitor.Capture.ReplayController"/> (transport + speed), rather than
+    /// scanned as fast as the disk allows.</summary>
+    public sealed record Replay(string Path) : SourceSpec;
+
     public string Description => this switch
     {
         Live l => l.InterfaceName,
         File f => System.IO.Path.GetFileName(f.Path),
+        Replay r => System.IO.Path.GetFileName(r.Path),
         _ => ToString()!,
     };
 }

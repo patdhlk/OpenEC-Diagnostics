@@ -41,8 +41,16 @@
                     Command="{Binding BrowsePcapCommand}" />
             <TextBox Text="{Binding PcapPath}" PlaceholderText="path/to/capture.pcap" />
           </DockPanel>
-          <Button Content="Analyze file" Classes="accent" Command="{Binding StartFileCommand}"
-                  IsEnabled="{Binding !IsStarting}" />
+          <Grid ColumnDefinitions="*,8,*">
+            <Button Grid.Column="0" Content="Analyze file" Classes="accent"
+                    Command="{Binding StartFileCommand}" IsEnabled="{Binding !IsStarting}"
+                    HorizontalAlignment="Stretch" />
+            <Button Grid.Column="2" Content="Replay"
+                    Command="{Binding StartReplayCommand}" IsEnabled="{Binding !IsStarting}"
+                    HorizontalAlignment="Stretch" />
+          </Grid>
+          <TextBlock Classes="label"
+                     Text="Analyze reads the whole file at once. Replay plays it back with transport and speed controls." />
         </StackPanel>
       </Border>
 

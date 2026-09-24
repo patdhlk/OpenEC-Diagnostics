@@ -20,6 +20,17 @@ change in any minor release.
   `openec frames --port` filters by port and `analyze`/`learn` report per segment;
   the Inspector gains a segment picker. Plain (non-CU2508) captures are unchanged.
   The same decoder also reads the ET2000 probe's postfix ESL framing.
+- **Capture replay** in the Inspector. Alongside "Analyze file" (which scans a
+  capture as fast as the disk allows), a capture file can now be **replayed** at
+  its recorded pacing: the start screen gains a *Replay* button, and the session
+  chrome gains a transport — play/pause, a stop that closes the session, and a
+  speed slider (0.1×–10×) that retimes playback live. A replay is driven like a
+  live source (single pass, `SupportsMultiplePasses` false), so the bus model,
+  topology and process image converge on screen exactly as they did on the wire.
+  While paused, a **Step** control advances the replay one frame at a time
+  (debugger-style single-step, skipping the inter-frame delay), so the exact frame
+  that trips a fault can be isolated by watching the event log and health advance
+  frame by frame.
 
 ## [0.1.2] - 2026-09-05
 

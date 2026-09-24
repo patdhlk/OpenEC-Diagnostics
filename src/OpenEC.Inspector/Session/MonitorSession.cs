@@ -19,25 +19,47 @@ public sealed class MonitorSession : IAsyncDisposable
     private Task _pump = Task.CompletedTask;
 
     public MonitorSession(SourceSpec source, EniConfiguration? eni = null)
-        : this(CreateMonitor(source, eni), source.Description, eni) =>
+    {
         Source = source;
+        SourceDescription = source.Description;
+        Eni = eni;
+        _monitor = CreateMonitor(source, eni, out var playback);
+        Playback = playback;
+    }
 
     /// <summary>Composition/test seam mirroring EtherCatMonitor.FromSource.</summary>
-    public MonitorSession(EtherCatMonitor monitor, string sourceDescription, EniConfiguration? eni = null)
+    public MonitorSession(EtherCatMonitor monitor, string sourceDescription, EniConfiguration? eni = null,
+        ReplayController? playback = null)
     {
         _monitor = monitor;
         SourceDescription = sourceDescription;
         Eni = eni;
+        Playback = playback;
     }
 
-    private static EtherCatMonitor CreateMonitor(SourceSpec source, EniConfiguration? eni)
+    private static EtherCatMonitor CreateMonitor(SourceSpec source, EniConfiguration? eni, out ReplayController? playback)
     {
-        ICaptureSource capture = source switch
+        playback = null;
+        ICaptureSource capture;
+        switch (source)
         {
-            SourceSpec.Live l => new LiveCaptureSource(l.InterfaceName),
-            SourceSpec.File f => new PcapFileSource(f.Path),
-            _ => throw new ArgumentOutOfRangeException(nameof(source)),
-        };
+            case SourceSpec.Live l:
+                capture = new LiveCaptureSource(l.InterfaceName);
+                break;
+            case SourceSpec.File f:
+                capture = new PcapFileSource(f.Path);
+                break;
+            case SourceSpec.Replay r:
+                // A replay begins paused; the shell's Play control resumes it. The paced decorator
+                // wraps a normal pcap reader and reports SupportsMultiplePasses=false, so the bus
+                // converges live over the single decode pass instead of being pre-learned.
+                var controller = new ReplayController(startPaused: true);
+                playback = controller;
+                capture = new ReplayCaptureSource(new PcapFileSource(r.Path), controller);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(source));
+        }
         if (source.RecordPath is { } recordPath)
             capture = new RecordingCaptureSource(capture, recordPath);
         return EtherCatMonitor.FromSource(capture, new EtherCatMonitorOptions
@@ -79,6 +101,10 @@ public sealed class MonitorSession : IAsyncDisposable
     public ProcessImage ProcessImage => SelectedSegment.Observer.ProcessImage;
     public EniConfiguration? Eni { get; }
     public SourceSpec? Source { get; }
+
+    /// <summary>Playback transport for a replay session (speed + pause/resume), or null when the
+    /// source is live or a fast file scan. The shell binds its controls to this.</summary>
+    public ReplayController? Playback { get; }
     public string? RecordPath => Source?.RecordPath;
     public string SourceDescription { get; }
     public SessionState State { get; private set; } = SessionState.Idle;

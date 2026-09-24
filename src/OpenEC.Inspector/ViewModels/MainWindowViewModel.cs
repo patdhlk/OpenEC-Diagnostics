@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OpenEC.Inspector.Session;
 using OpenEC.Monitor;
+using OpenEC.Monitor.Capture;
 using OpenEC.Monitor.Eni;
 using OpenEC.Monitor.Learning;
 using OpenEC.Monitor.Observation;
@@ -68,6 +69,31 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [ObservableProperty] private StatusDot _healthDot;
     [ObservableProperty] private string _healthText = "";
 
+    // --- Replay transport (populated only for a SourceSpec.Replay session) ---
+    [ObservableProperty] private bool _isReplay;
+    [ObservableProperty] private bool _isPlaybackPaused;
+    [ObservableProperty] private double _playbackSpeed = 1.0;
+    [ObservableProperty] private bool _canControlPlayback;
+    [ObservableProperty] private bool _canStepFrame;
+
+    public double MinPlaybackSpeed => ReplayController.MinSpeed;
+    public double MaxPlaybackSpeed => ReplayController.MaxSpeed;
+    public string PlayPauseLabel => IsPlaybackPaused ? "\u25b6 Play" : "\u23f8 Pause";
+    public string PlaybackSpeedText =>
+        string.Create(CultureInfo.InvariantCulture, $"{PlaybackSpeed:0.0}\u00d7");
+
+    partial void OnIsPlaybackPausedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(PlayPauseLabel));
+        CanStepFrame = IsReplay && Session?.State == SessionState.Running && value;
+    }
+
+    partial void OnPlaybackSpeedChanged(double value)
+    {
+        if (Session?.Playback is { } playback) playback.Speed = value;
+        OnPropertyChanged(nameof(PlaybackSpeedText));
+    }
+
     private const double ClassicPaneWidth = 280;
     private const double TopologyPaneWidth = 620;
 
@@ -125,6 +151,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
         // A fault can land between StartViewModel's probe and this subscription; catch up so the banner isn't lost.
         if (session.State == SessionState.Faulted) FaultMessage = session.Fault?.Message;
         Explorer.SelectedNode = Explorer.Root; // drives CurrentPage = Dashboard through the callback
+        IsReplay = session.Playback is not null;
+        IsPlaybackPaused = session.Playback?.IsPaused ?? false;
+        PlaybackSpeed = session.Playback?.Speed ?? 1.0;
         Tick();
     }
 
@@ -207,6 +236,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private void UpdateStatus()
     {
         SessionActionLabel = Session?.State == SessionState.Running ? StopLabel : CloseLabel;
+        CanControlPlayback = IsReplay && Session?.State == SessionState.Running;
+        CanStepFrame = IsReplay && Session?.State == SessionState.Running && IsPlaybackPaused;
         if (Session is null)
         {
             StatusText = "No session";
@@ -256,6 +287,28 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [RelayCommand]
     private void DismissFault() => FaultMessage = null;
+
+    /// <summary>Play/pause toggle for a replay session. A no-op for non-replay sessions.</summary>
+    [RelayCommand]
+    private void TogglePlayPause()
+    {
+        if (Session?.Playback is not { } playback) return;
+        if (playback.IsPaused)
+        {
+            playback.Resume();
+            IsPlaybackPaused = false;
+        }
+        else
+        {
+            playback.Pause();
+            IsPlaybackPaused = true;
+        }
+    }
+
+    /// <summary>Advance a paused replay by one frame (debugger-style single step). A no-op unless a
+    /// replay is paused; the controller ignores steps while running.</summary>
+    [RelayCommand]
+    private void StepFrame() => Session?.Playback?.Step();
 
     private const string NothingLearnedHint =
         "Nothing has been learned from this capture yet. The reconstruction is built from the "
@@ -385,6 +438,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         SessionDot = StatusDot.Idle;
         HealthDot = StatusDot.Idle;
         HealthText = "";
+        IsReplay = false;
+        IsPlaybackPaused = false;
+        CanControlPlayback = false;
+        CanStepFrame = false;
+        PlaybackSpeed = 1.0;
         // With no session there is nothing to export, and the tick that would normally notice has
         // stopped mattering — the shell is back on the start screen.
         RefreshSaveLearnedEniAvailability();
