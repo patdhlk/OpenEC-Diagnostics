@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dahlke.EtherCAT.Diagnostics" Version="0.10.0" />
+    <PackageReference Include="Dahlke.EtherCAT.Diagnostics" Version="0.11.0" />
   </ItemGroup>
 
 </Project>
