@@ -54,7 +54,7 @@ jobs:
           Start-Process $exe -ArgumentList "/loopback_support=yes /winpcap_mode /S" -Wait
 
       - name: Cache NuGet packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
